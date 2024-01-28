@@ -9,6 +9,7 @@ Color darkGreen = {43,51,24,255};
 
 int cellsize = 30;
 int cellCount = 25;
+int offset = 75;
 
 double lastUpdateTime = 0;
 
@@ -43,7 +44,7 @@ class Food{
     }
 
     void draw(){
-        DrawRectangle(position.x*cellsize, position.y*cellsize,cellsize,cellsize,darkGreen);
+        DrawRectangle(offset+position.x*cellsize, offset+position.y*cellsize,cellsize,cellsize,darkGreen);
     }
 
     Vector2 generateRandomCell(){
@@ -75,12 +76,11 @@ class Snake{
         {
             int x = body[i].x;
             int y = body[i].y;
-            DrawRectangle(x*cellsize,y*cellsize, cellsize,cellsize, darkGreen);
+            DrawRectangle(offset+x*cellsize,offset+y*cellsize, cellsize,cellsize, darkGreen);
         }
     }
     void update(){
-        float MIN = 55;
-        
+    
         if(addSegment == true){
             body.push_front(Vector2Add(body[0],direction));
             addSegment = false;
@@ -91,12 +91,19 @@ class Snake{
         }
         
     }
+        void reset(){
+        body = {Vector2{6,9},Vector2{5,9},Vector2{4,9}};
+        direction = {1,0};
+    }
 };
 
 class Game{
     public:
     Snake snake = Snake();
     Food food = Food(snake.body);
+    bool running = true;
+    int score = 0;
+
     
     void draw(){
         food.draw();
@@ -104,14 +111,19 @@ class Game{
     }
 
     void update(){
-        snake.update();
-        checkCollisionWithFood();
+        if(running == true){
+            snake.update();
+            checkCollisionWithFood();
+            checkCollisionWithEdge();
+            checkCollisionWithBody();
+        }
     }
 
     void checkCollisionWithFood(){
         if(Vector2Equals(snake.body[0], food.position)){
             food.position = food.generateRandomPos(snake.body);
             snake.addSegment = true;
+            score ++;
         }
     }
 
@@ -124,14 +136,26 @@ class Game{
         }
     }
 
+    void checkCollisionWithBody(){
+        deque<Vector2> headlessbody = snake.body;
+        headlessbody.pop_front();
+        if( ElementInDeque(snake.body[0], headlessbody)){
+            gameOver();
+        }
+    }
+
     void gameOver(){
         cout<<"Game Over"<<endl;
+        snake.reset();
+        running = false;
+        score = 0;
     }
+
 };
 
 int main () {
     cout << "Starting game...";
-    InitWindow(cellsize*cellCount,cellsize*cellCount, "Snake");
+    InitWindow(2*offset + cellsize*cellCount,2*offset + cellsize*cellCount, "Snake");
     SetTargetFPS(60);
 
     Game game = Game();
@@ -145,22 +169,27 @@ int main () {
         // Controls
         if(IsKeyPressed(KEY_UP) && game.snake.direction.y != 1){
             game.snake.direction = {0,-1};
+            game.running = true;
         }
         else if(IsKeyPressed(KEY_DOWN) && game.snake.direction.y != -1){
             game.snake.direction = {0,1};
+            game.running = true;
         }
         else if(IsKeyPressed(KEY_LEFT) && game.snake.direction.x != 1){
             game.snake.direction = {-1,0};
+            game.running = true;
         }
         else if(IsKeyPressed(KEY_RIGHT) && game.snake.direction.x != -1){
             game.snake.direction = {1,0};
+            game.running = true;
         }
 
 
         ClearBackground(green);
         
         game.draw();
-        
+        DrawRectangleLinesEx(Rectangle{(float)offset-5,(float)offset-5,(float)cellsize*cellCount,(float)cellsize*cellCount}, 5, darkGreen);
+        DrawText(TextFormat("%i", game.score), offset-5, 20, 40, darkGreen);
         EndDrawing();
     }
 
