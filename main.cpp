@@ -103,6 +103,7 @@ class Game{
     Food food = Food(snake.body);
     bool running = true;
     int score = 0;
+    float speed = 0.2;
 
     
     void draw(){
@@ -116,6 +117,7 @@ class Game{
             checkCollisionWithFood();
             checkCollisionWithEdge();
             checkCollisionWithBody();
+            updateSpeed();
         }
     }
 
@@ -128,7 +130,7 @@ class Game{
     }
 
     void checkCollisionWithEdge(){
-        if(snake.body[0].x == cellCount || snake.body[0].y == -1){
+        if(snake.body[0].x == cellCount || snake.body[0].x == -1){
             gameOver();
         }
         if(snake.body[0].y == cellCount || snake.body[0].y == -1){
@@ -150,7 +152,9 @@ class Game{
         running = false;
         score = 0;
     }
-
+    void updateSpeed(){
+        speed = 0.2-(0.005*score);
+    }
 };
 
 int main () {
@@ -162,7 +166,7 @@ int main () {
 
     while(WindowShouldClose() == false){
         BeginDrawing();
-        if(eventTrigger(0.2)){
+        if(eventTrigger(game.speed)){
             game.update();
         }
 
